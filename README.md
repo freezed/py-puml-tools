@@ -1,4 +1,13 @@
+# Disclamer
+
+Personnal adaptation to [RockyRoad29/py-puml-tools](https://github.com/RockyRoad29/py-puml-tools).
+
+Fork in progress for the converter _PlantUML_ to _SQL_ : [**dbpuml2sql**](dbpuml2sql/README.md).
+
+---
+_Original README :_
 # Python tools for PlantUML
+
 
 These are some tools that I have made for use in the weekly Python programming
 handins, I am doing 2016-2018 at Lillebaelt Academy.
@@ -13,4 +22,3 @@ I am using them in school.*
  * [**py2uml**](py2puml/): Generate a PlantUML class diagram from Python source code.
    The original was rewritten, extended, and documentet by [@RockyRoad29](https://github.com/RockyRoad29).
    Repository: [RockyRoad29/py-puml-tools](https://github.com/RockyRoad29/py-puml-tools)
-

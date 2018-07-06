@@ -1,17 +1,60 @@
+# README
+
+The goal is to use a [PlantUML class diagram]() in a [DRY]() process to generate an _acceptable_ SQL script, via _class diagrams_ and a `physical data model` _(a _not so bad example_ can be found [here](https://github.com/freezed/ocp6/tree/master/src-puml))_
+
+* `*.iuml` files contains project sources (classes, relations, attributes, keys, associatons, etc.)
+* `*.puml` files contains includes and diagrams specific informations.
+* `*.puml` files must be renderable by a _PlantUML server_
+* `PDM.puml` file is used to generate SQL
+
+## Roadmap
+
+- [x] adds a bit verbosity when processing
+- [ ] scrape attributes
+- [ ] scrape primary key
+- [ ] scrape foreign key
+- [ ] scrape primary foreign key
+- use some preprocessing feature
+    - [ ] `!includeurl`
+- [ ] keep comments
+- respect UML syntax in [PlantUML] file & extrapole SQL statement
+    - [ ] use [UML primitive type](https://www.uml-diagrams.org/data-type.html#primitive-type)
+    - [ ] define default parameters's types (VARCHAR, DECIMAL, DATETIME)
+- [ ] MySQL/MariaDB SQL Syntax
+- [ ] nest data in a nice dict like this:
+
+```
+    d = {
+        "table1" : {
+            "attr" : [
+                {
+                    "name" : "id"
+                    "isPrimary" : true
+                    "isForeign" : false
+                    "type" : "String"
+                },
+
+            ]
+        }
+    }
+```
+---
+
+_Original README :_
 # PlantUML to SQL
- 
+
 Takes a tweaked PlantUML class diagram, that serves as a database diagram, and
 spit out the SQL commands needed to create the tables.
 
 ## To do
  * Support more constraints (only PRIMARY KEY and FOREIGN KEY at this time)
- 
+
 ## Running
 
 Run the program with the PlantUML file as argument.
 
-    $ ./dbpuml2sql.py db.puml 
-    
+    $ ./dbpuml2sql.py db.puml
+
     CREATE TABLE productTable(
         idProd INTEGER PRIMARY KEY,
         product TEXT
@@ -45,7 +88,7 @@ Run the program with the PlantUML file as argument.
         FOREIGN KEY(orderId) REFERENCES orderTable(idOrder),
         productId INTEGER,
         FOREIGN KEY(productId) REFERENCES productTable(idProd)
-    ); 
+    );
 
 **Input diagram**
 
