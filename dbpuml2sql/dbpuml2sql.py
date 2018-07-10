@@ -38,7 +38,7 @@ __VERSION__ = '1.1.0'
 def parse_commandline():
     """
     Parse command line arguments.
-    
+
     :return: Plant UML input file.
     """
     # Set up the arguments.
@@ -71,7 +71,7 @@ def main():
     reader.parse(puml_file.readlines())
 
     # Print the SQL.
-    print(reader.sql())
+    # STUDY print(reader.sql())
 
 
 # Run this when invoked directly
