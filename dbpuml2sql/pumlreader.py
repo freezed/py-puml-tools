@@ -14,7 +14,8 @@ Since: 2017-08-08
 Convert a database diagram written in a subset of PlantUML to SQLite syntax.
 """
 from table import Table
-
+import re
+import pprint
 
 def lineNormalise(line):
     """
@@ -56,10 +57,8 @@ class PUMLReader:
     Class to read, parse, and convert tables from a PlantUML file into SQL
     commands to create them in the database.
     """
-    keywords = (
-        '@startuml', 'skinparam', 'scale', '!', 'hide methods',
-        'hide stereotypes',
-        'sprite', '@enduml')
+    target_keywords = ('class', 'pyk', 'fnk', 'pfk')
+
 
     def __init__(self):
         """
@@ -76,29 +75,70 @@ class PUMLReader:
         """
         # Keep count of the current line number.
         i = 0
+        # list tables and content
+        tables = dict()
+        attr_param = list()
 
-        # Array of foreign keys.
-        fks = []
+        skipped_lines = list()  # DEBUG
 
         # Loop through all lines.
         for i in range(0, len(lines)):
-            # Used to ok parsing of the line.
-            skip = False
+            line_stripped = lineNormalise(lines[i])
+            skip = True
 
-            # Look for keywords at the beginning of the line.
-            for keyword in PUMLReader.keywords:
-                if lines[i].startswith(keyword):
-                    # Found one, do not parse.
-                    skip = True
+            for keyword in self.target_keywords:
 
-            # Only parse lines that has no keywords.
-            if not skip:
-                if isTable(lines[i]):
-                    # There was a table at that line, parse it.
-                    table = Table()
-                    table.parse(lines[i:])
-                    # Add it.
-                    self.tables[table.name] = table
+                # Look for keywords at the beginning of the line.
+                if line_stripped.startswith(keyword):
+                    # print("{} : {}".format(i, line_stripped))  # DEBUG
+                    skip = False
+
+                    # Found one, do parse
+                    expression = re.search(r'(\w+) (\w+)', line_stripped)
+                    if keyword is self.target_keywords[0]:   # class/table
+                        # get table name
+                        table_name = expression.group(2)
+
+                        # add it in tables if not already in
+                        # tables (classes) may be at differant place in a PlantUML file
+                        if table_name not in tables:
+                            tables[table_name] = list()
+                            # print("Table : «{}» ajoutee".format(expression.group(2)))  # DEBUG
+                            print("{} : +table «{}»".format(i, table_name))  # DEBUG
+
+                    elif keyword is self.target_keywords[1]:   # primary key
+                        # import pdb; pdb.set_trace()
+                        # get related table
+                        attr_param = (re.sub(r'(pyk\()|\)|,|\n', r' ', line_stripped).strip().split())
+                        tables[table_name].extend(attr_param)
+                        print("{} :\t«{}» +{}".format(i, table_name, attr_param))  # DEBUG
+
+                    elif keyword is self.target_keywords[2]:   # foreign key
+                        # get related table
+                        attr_param = (re.sub(r'(fnk\()|\)|,|\n', r' ', line_stripped).strip().split())
+                        tables[table_name].extend(attr_param)
+                        print("{} :\t«{}» +{}".format(i, table_name, attr_param))  # DEBUG
+
+
+                    elif keyword is self. target_keywords[3]:   # primary foreign key
+                        # get related table
+                        attr_param = (re.sub(r'(pfk\()|\)|,|\n', r' ', line_stripped).strip().split())
+                        tables[table_name].extend(attr_param)
+                        print("{} :\t«{}» +{}".format(i, table_name, attr_param))  # DEBUG
+
+                    else:   # attribute
+                        # print(line_stripped)  # DEBUG
+                        print("{} : \t«{}» Attribute? {}".format(i, line_stripped))  # DEBUG
+
+            if skip:
+                skipped_lines.append(i)
+
+        print("\nNumbers of tables : {}\n".format(len(tables)))
+        pp = pprint.PrettyPrinter(indent=4, compact=True)
+        print("Scraped data:")
+        pp.pprint(tables)  # DEBUG
+        print("\nSkipped lines: {}\n".format(skipped_lines))  # DEBUG
+
 
     def sql(self):
         """
