@@ -1,0 +1,172 @@
+@startuml
+
+title Modèle physique de donnée\n
+
+/' = = = = = = = STYLE = = = = = = = '/
+hide empty methods
+hide circle
+skinparam class {
+    BackgroundColor<<assoc>> lightblue
+}
+
+/' = = = = = = = MACRO = = = = = = = '/
+!define rel(a,b,c,d,e) a c e
+!define rea(a,b,c,d) (a, b) c d
+!define pyk(n,t="Integer") <font color="red"><b>PK : n</b> t</font>
+!define fnk(n,r,t="Integer") <font color="blue"><b>FK :</b> n </font>
+!define pfk(n,r,t="Integer") <font color="orangered"><b>PFK :</b> n</font>
+
+/' = = = = = = = CLASSE = = = = = = = '/
+class address
+class client
+class composition <<assoc>>
+class employee
+class ingredient
+class line_order
+class order
+class payment_history
+class payment_solution
+class phone
+class pizza
+class restaurant
+class stock <<assoc>>
+
+/' = = = = = = = RELATION = = = = = = = '/
+rel(address,1,--,1,restaurant)
+rel(address,1,--,*,employee)
+rel(client,1,--,1..2,phone)
+rel(client,1..2,--,1..2,address)
+rel(employee,1,-,*,order)
+rel(line_order,*,--,1,order)
+rel(line_order,1,-,*,pizza)
+rel(order,*,-,1,client)
+rel(order,1,-,*,restaurant)
+rel(order,1,-left-,*,payment_history)
+rel(payment_solution,1,-up-,*,payment_history)
+rel(phone,1,--,1..2,employee)
+rel(phone,1,--,1,restaurant)
+
+/' = = = = = = = KEY = = = = = = = '/
+class address {
+    pyk(id,Integer)
+}
+class client {
+    pyk(id, Integer)
+    fnk(delivery_address_id,address.id)
+    fnk(billing_address_id,address.id)
+}
+class composition {
+    pfk(pizza_id,pizza.id)
+    pfk(ingredient_id,ingredient.id)
+}
+class employee {
+    pyk(id,Integer)
+    fnk(address_id,address.id)
+    fnk(phone_id,phone.id)
+}
+class ingredient {
+    pyk(id,Integer)
+}
+class line_order {
+    pyk(id,Integer)
+    fnk(order_id,order.id)
+    fnk(pizza_id,pizza.id)
+}
+class order {
+    pyk(id,Integer)
+    fnk(employee_id,employee.id)
+    fnk(client_id,client.id)
+    fnk(restaurant_id,restaurant.id)
+}
+class payment_history {
+    pfk(payment_solution_id,payment_solution.id)
+    pfk(order_id,order.id)
+}
+class payment_solution {
+    pyk(id,Integer)
+}
+class phone {
+    pyk(id,Integer)
+}
+class pizza {
+    pyk(id,Integer)
+}
+class restaurant {
+    pyk(id,Integer)
+    fnk(address_id,address.id)
+    fnk(phone_id,phone.id)
+}
+class stock {
+    pfk(ingredient_id,ingredient.id)
+    pfk(restaurant_id,restaurant.id)
+}
+
+/' = = = = = = = ATTRIBUTE = = = = = = = '/
+class address {
+    Label: String
+    name: String
+    line1: String
+    line2: String
+    zip: String
+    city: String
+}
+class client {
+    1st_name: String
+    name: String
+    login: String
+    password: String
+}
+class composition {
+    quantity: Real
+}
+class employee {
+    1st_name: String
+    name: String
+    login: String
+    password: String
+}
+class ingredient {
+    label: String
+    unit: String
+}
+class line_order {
+    date: Date
+    quantity: Integer
+    tax_rate100: Real
+    unit_price_ex_tax: Real
+}
+class order {
+    invoice_num: String
+    date: Date
+    status: String
+}
+class payment_history {
+    amount: Real
+    date: Date
+}
+class payment_solution {
+    label: String
+}
+class pizza {
+    name: String
+    unit_price_ex_tax: Real
+    tax_rate100: Real
+}
+class phone {
+    number: String
+}
+class restaurant {
+    name: String
+}
+class stock {
+    quantity: Real
+}
+
+
+/' = = = = = = = ASSOCIATION = = = = = = = '/
+rel(pizza,.,-,.,composition)
+rel(composition,.,-,.,ingredient)
+rel(ingredient,.,--,.,stock)
+rel(stock,.,--,.,restaurant)
+
+@enduml

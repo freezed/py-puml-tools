@@ -1,0 +1,147 @@
+@startuml
+title Modèle physique de donnée
+
+/' = = = = = = = STYLE = = = = = = = '/
+skinparam linetype ortho
+
+!define class x) class x << (T,#FFAAAA) >>
+!define pyk(x) <b>PK: x</b>
+!define fnk(x,reference) <b>FK: </b>x
+
+/' = = = = = = = CLASSE = = = = = = = '/
+
+/' - - PkgAccount - - '/
+class address {
+    pyk(id) INTEGER NOT NULL
+    ---
+    line1 VARCHAR(30) NOT NULL
+    line2 VARCHAR(30) [0..1]
+    zip VARCHAR(30) NOT NULL
+    city VARCHAR(30) NOT NULL
+}
+
+class client {
+    pyk(id) INTEGER NOT NULL
+    fnk(billing_address_id, address.id) INTEGER [0..1]
+    fnk(delivery_address_id, address.id) INTEGER NOT NULL
+    fnk(phone_id, phone.id) INTEGER [0..1]
+    ---
+    1st_name VARCHAR(30) NOT NULL
+    name VARCHAR(30) NOT NULL
+}
+
+class employee {
+    pyk(id) INTEGER NOT NULL
+    fnk(home_address_id, address.id) INTEGER NOT NULL
+    fnk(phone_id, phone.id) INTEGER NOT NULL
+    fnk(restaurant_id, restaurant_.id) INTEGER NOT NULL
+    ---
+    1st_name VARCHAR(30) NOT NULL
+    name VARCHAR(30) NOT NULL
+}
+
+class phone {
+    pyk(id) INTEGER NOT NULL
+    ---
+    number VARCHAR(30)
+}
+
+client "1..*" - "1..*" phone
+client "1..*" - "1..*" address
+address "1" -down- "*" employee
+phone "1..*" -right- "1..*" employee
+
+
+/' - - PkgIngredient - - '/
+class composition {
+    fnk(pizza_id, pizza.id) INTEGER NOT NULL
+    fnk(ingredient_id, ingredient.id) INTEGER NOT NULL
+    ---
+    quantity: DECIMAL(6,4) NOT NULL
+}
+
+class ingredient {
+    pyk(id) INTEGER NOT NULL
+    ---
+    label VARCHAR(30) NOT NULL
+}
+
+class pizza {
+    pyk(id) INTEGER NOT NULL
+    ---
+    name VARCHAR(30) NOT NULL
+    unit_price_ex_tax: DECIMAL(6,4) NOT NULL
+    tax_rate100: DECIMAL(6,4) NOT NULL
+}
+
+class restaurant {
+    pyk(id) INTEGER NOT NULL
+    fnk(address_id, address.id) INTEGER NOT NULL
+    ---
+    name VARCHAR(30)
+}
+
+class stock {
+    fnk(ingredient_id, ingredient.id) INTEGER NOT NULL
+    fnk(restaurant_id, restaurant.id) INTEGER NOT NULL
+    ---
+    quantity: DECIMAL(6,4) NOT NULL
+    unit VARCHAR(30) NOT NULL
+}
+
+ingredient "1..*" - "1..*" restaurant
+(ingredient, restaurant) .. stock
+
+pizza "1..*" - "1..*" ingredient
+(pizza, ingredient) .. composition
+
+
+/' - - PkgOrder - - '/
+class line_order {
+    pyk(id) INTEGER NOT NULL
+    fnk(order_id, order.id) INTEGER NOT NULL
+    fnk(pizza_id, pizza.id) INTEGER NOT NULL
+    ---
+    date DATETIME NOT NULL
+    quantity INTEGER NOT NULL
+    size VARCHAR(30) NOT NULL
+    tax_rate100: DECIMAL(6,4) NOT NULL
+    unit_price_ex_tax: DECIMAL(6,4) NOT NULL
+}
+
+class order {
+    pyk(id) INTEGER NOT NULL
+    fnk(employee_id, employee.id) INTEGER NOT NULL
+    fnk(client_id, client.id) INTEGER NOT NULL
+    ---
+    invoice_num VARCHAR(30) NOT NULL
+    date DATETIME NOT NULL
+    status VARCHAR(30) NOT NULL
+}
+
+class payment_history {
+    fnk(payment_solution_id, payment_solution.id) INTEGER NOT NULL
+    fnk(order_id, order.id) INTEGER NOT NULL
+    ---
+    amount: DECIMAL(6,4) NOT NULL
+    date DATETIME NOT NULL
+}
+
+class payment_solution {
+    pyk(id) INTEGER NOT NULL
+    ---
+    label VARCHAR(30) NOT NULL
+}
+
+line_order "*" - "1" order
+order "1" -up- "*" payment_history
+payment_solution "1" -down- "*" payment_history
+
+
+/' = = = = = = = RELATION INTER PKG = = = = = = = '/
+employee "1" - "*" order
+order "*" - "1" client
+address "1" -- "1" restaurant
+employee "*" -- "1" restaurant
+
+@enduml

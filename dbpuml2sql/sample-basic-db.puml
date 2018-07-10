@@ -1,0 +1,63 @@
+@startuml
+
+skinparam monochrome true
+skinparam linetype ortho
+scale 2
+
+!define class x) class x << (T,#FFAAAA) >>
+!define view(x) class x << (V,#FFAAAA) >>
+!define ent(x) class x << (E,#FFAAAA) >>
+
+!define pyk(x) <b>PK: x</b>
+!define fnk(x,reference) <b>FK: </b>x
+hide methods
+hide stereotypes
+
+class productTable {
+	pyk(idProd) INTEGER
+	---
+	product TEXT
+}
+
+class countryTable {
+	pyk(idCountry) INTEGER
+	---
+	country TEXT
+}
+
+class cityTable {
+	pyk(idCity) INTEGER
+	fnk(country,countryTable.idCountry) TEXT
+	---
+	city TEXT
+}
+
+class customerTable {
+	pyk(idCust) INTEGER
+	fnk(city,cityTable.idCity) TEXT
+	---
+	address TEXT
+	email TEXT
+	name TEXT
+}
+
+class orderTable {
+	pyk(idOrder) INTEGER
+	fnk(custId,customerTable.idCust) INTEGER
+	---
+	date DATE
+}
+
+class orderProductTable {
+	pyk(orderId) INTEGER
+	fnk(orderId,orderTable.idOrder) INTEGER
+	fnk(productId,productTable.idProd) INTEGER
+}
+
+cityTable "0..n" -- "1..1" countryTable
+customerTable "0..n" -- "1..1" cityTable
+orderTable "0..n" -- "1..1" customerTable
+orderProductTable "0..n" -- "1..1" orderTable
+orderProductTable "0..n" -- "1..1" productTable
+
+@enduml
