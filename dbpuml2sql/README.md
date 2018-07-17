@@ -1,19 +1,164 @@
 # README
 
-The goal is to use a [PlantUML class diagram]() in a [DRY]() process to generate an _acceptable_ SQL script, via _class diagrams_ and a `physical data model` _(a _not so bad example_ can be found [here](https://github.com/freezed/ocp6/tree/master/src-puml))_
+The goal is to use a [PlantUML class diagram](http://plantuml.com/) in a [DRY](https://en.wikipedia.org/wiki/Don%27t_repeat_yourself) process to generate an _acceptable_ SQL script, via _class diagrams_ and a `physical data model`. Code below came from [here](https://github.com/freezed/ocp6/tree/master/src-puml).
 
-* `*.iuml` files contains project sources (classes, relations, attributes, keys, associatons, etc.)
-* `*.puml` files contains includes and diagrams specific informations.
-* `*.puml` files must be renderable by a _PlantUML server_
-* `PDM.puml` file is used to generate SQL
+## Code stucture
+
+### `*.iuml` files contains project sources
+
+ _(syntax uses [PlantUML's macro pre-processor](http://plantuml.com/preprocessing) feature)_
+
+#### Classes
+
+    class address
+    class client
+    class composition <<assoc>>
+    (…)
+
+#### Relations
+
+    rel(address,1,--,1,restaurant)
+    rel(address,1,--,*,employee)
+    rel(client,1,--,1..2,phone)
+    (…)
+
+#### Attributes
+
+    class address {
+        att(label,String,VARCHAR(30) NOT NULL)
+        att(name,String,VARCHAR(30) NOT NULL)
+        att(line1,String,VARCHAR(30) NOT NULL)
+        att(line2,String [0..1],VARCHAR(20))
+        att(zip,String,VARCHAR(5) NOT NULL)
+        att(city,String,VARCHAR(20) NOT NULL)
+    }
+    class client {
+        att(1st_name,String,VARCHAR(30) NOT NULL)
+        att(name,String,VARCHAR(30) NOT NULL)
+        att(mail,String,VARCHAR(40) NOT NULL)
+        att(login,String,VARCHAR(30) NOT NULL)
+        att(password_sha2bin,String,BINARY(32) NOT NULL)
+    }
+    class composition {
+        att(quantity,Integer,TINYINT NOT NULL UNSIGNED)
+    }
+
+#### Keys (primary and/or foreign)
+
+    class address {
+        pyk(id)
+    }
+    class client {
+        pyk(id)
+        fnk(delivery_address_id,address.id)
+        fnk(billing_address_id,address.id)
+        fnk(phone_id,phone.id)
+    }
+    class composition {
+        pfk(pizza_id,pizza.id,TINYINT UNSIGNED NOT NULL)
+        pfk(ingredient_id,ingredient.id,TINYINT UNSIGNED NOT NULL)
+    }
+
+#### Associatons classes
+
+    rel(pizza,1..*,-,1..*,ingredient)
+    rea(pizza,ingredient,..,composition)
+    rel(ingredient,1..*,--,1..*,restaurant)
+    rea(ingredient,restaurant,..,stock)
+    (…)
+
+### `*.puml` files contains includes and diagrams specific informations
+
+#### Class diagram simplyfied
+
+    @startuml
+    title Functional domain description\n <i>(simplyfied)</i>
+    /' = = = = = = = STYLE = = = = = = = '/
+    skinparam monochrome true
+    hide empty methods
+    hide <<assoc>> circle
+    skinparam class {
+        BackgroundColor<<assoc>> lightblue
+    }
+    /' = = = = = = = MACRO = = = = = = = '/
+    !define rel(a,b,c,d,e) a c e
+    !define rea(a,b,c,d) (a, b) c d
+    /' = = = = = = = CLASSE = = = = = = = '/
+    !includeurl https://raw.githubusercontent.com/freezed/ocp6/master/src-puml/classes.iuml
+    /' = = = = = = = ASSOCIATION = = = = = = = '/
+    !includeurl https://raw.githubusercontent.com/freezed/ocp6/master/src-puml/associations.iuml
+    @enduml
+
+#### Class diagram
+
+    @startuml
+    title Functional domain description
+    /' = = = = = = = STYLE = = = = = = = '/
+    hide empty methods
+    hide <<assoc>> circle
+    skinparam class {
+        BackgroundColor<<assoc>> lightblue
+    }
+    /' = = = = = = = MACRO = = = = = = = '/
+    !define rel(a,b,c,d,e) a "b" c "d" e
+    !define rea(a,b,c,d) (a, b) c d
+    !define att(n,u,s) n : u
+    /' = = = = = = = CLASSE = = = = = = = '/
+    !includeurl https://raw.githubusercontent.com/freezed/ocp6/master/src-puml/classes.iuml
+    /' = = = = = = = ATTRIBUTE = = = = = = = '/
+    !includeurl https://raw.githubusercontent.com/freezed/ocp6/master/src-puml/attributes.iuml
+    /' = = = = = = = ASSOCIATION = = = = = = = '/
+    !includeurl https://raw.githubusercontent.com/freezed/ocp6/master/src-puml/associations.iuml
+    @enduml
+
+### Physical data model
+
+    @startuml
+    title Physical data model
+    /' = = = = = = = STYLE = = = = = = = '/
+    hide empty methods
+    hide circle
+    skinparam class {
+        BackgroundColor<<assoc>> lightblue
+    }
+    /' = = = = = = = MACRO = = = = = = = '/
+    !define rel(a,b,c,d,e) a c e
+    !define rea(a,b,c,d) (a, b) c d
+    !define pyk(n,t="MEDIUMINT NOT NULL UNSIGNED") <font color="red">PK:<b>n</b> <size:09>[t]</size></font>
+    !define fnk(n,r,t="MEDIUMINT NOT NULL UNSIGNED") <font color="blue">FK:<b>n</b> <size:09>[t]</size></font>
+    !define pfk(n,r,t="MEDIUMINT NOT NULL UNSIGNED") <font color="orangered">PFK:<b>n</b> <size:09>[t]</size></font>
+    !define att(n,u,s) {field} <b>n</b> [s]
+    /' = = = = = = = CLASSE = = = = = = = '/
+    !includeurl https://raw.githubusercontent.com/freezed/ocp6/master/src-puml/classes.iuml
+    /' = = = = = = = KEY = = = = = = = '/
+    !includeurl https://raw.githubusercontent.com/freezed/ocp6/master/src-puml/keys.iuml
+    /' = = = = = = = ATTRIBUTE = = = = = = = '/
+    !includeurl https://raw.githubusercontent.com/freezed/ocp6/master/src-puml/attributes.iuml
+    /' = = = = = = = ASSOCIATION = = = = = = = '/
+    rel(pizza,.,-,.,composition)
+    rel(composition,.,-,.,ingredient)
+    rel(ingredient,.,--,.,stock)
+    rel(stock,.,--,.,restaurant)
+    @enduml
+
+## Diagrams
+
+![Simple functional domain description](https://raw.githubusercontent.com/freezed/py-puml-tools/master/dbpuml2sql/readme-diagrams/functional_model_simplyfied.png "Simple functional domain description")
+___
+
+![Functional domain description](https://raw.githubusercontent.com/freezed/py-puml-tools/master/dbpuml2sql/readme-diagrams/functional_model.png "Functional domain description")
+___
+
+![Physical data model](https://raw.githubusercontent.com/freezed/py-puml-tools/master/dbpuml2sql/readme-diagrams/physical_data_model.png "Physical data model")
+
 
 ## Roadmap
 
 - [x] adds a bit verbosity when processing
-- [ ] scrape attributes
-- [ ] scrape primary key
-- [ ] scrape foreign key
-- [ ] scrape primary foreign key
+- [ ] scrapes attributes
+- [x] scrapes primary key
+- [x] scrapes foreign key
+- [x] scrapes primary foreign key
 - use some preprocessing feature
     - [ ] `!includeurl`
 - [ ] keep comments
@@ -38,58 +183,3 @@ The goal is to use a [PlantUML class diagram]() in a [DRY]() process to generate
         }
     }
 ```
----
-
-_Original README :_
-# PlantUML to SQL
-
-Takes a tweaked PlantUML class diagram, that serves as a database diagram, and
-spit out the SQL commands needed to create the tables.
-
-## To do
- * Support more constraints (only PRIMARY KEY and FOREIGN KEY at this time)
-
-## Running
-
-Run the program with the PlantUML file as argument.
-
-    $ ./dbpuml2sql.py db.puml
-
-    CREATE TABLE productTable(
-        idProd INTEGER PRIMARY KEY,
-        product TEXT
-    );
-    CREATE TABLE countryTable(
-        idCountry INTEGER PRIMARY KEY,
-        country TEXT
-    );
-    CREATE TABLE cityTable(
-        idCity INTEGER PRIMARY KEY,
-        country TEXT,
-        FOREIGN KEY(country) REFERENCES countryTable(idCountry),
-        city TEXT
-    );
-    CREATE TABLE customerTable(
-        idCust INTEGER PRIMARY KEY,
-        city TEXT,
-        FOREIGN KEY(city) REFERENCES cityTable(idCity),
-        address TEXT,
-        email TEXT,
-        name TEXT
-    );
-    CREATE TABLE orderTable(
-        idOrder INTEGER PRIMARY KEY,
-        custId INTEGER,
-        FOREIGN KEY(custId) REFERENCES customerTable(idCust),
-        date DATE
-    );
-    CREATE TABLE orderProductTable(
-        orderId INTEGER,
-        FOREIGN KEY(orderId) REFERENCES orderTable(idOrder),
-        productId INTEGER,
-        FOREIGN KEY(productId) REFERENCES productTable(idProd)
-    );
-
-**Input diagram**
-
-![Input database diagram](db.png)
